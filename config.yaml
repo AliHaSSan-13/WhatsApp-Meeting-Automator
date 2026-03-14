@@ -1,0 +1,19 @@
+# WhatsApp to Zoom Automator Configuration
+
+browser:
+  cdp_url: "http://localhost:9222"
+  timeout: 30000
+
+whatsapp:
+  target_chat: "Ali Hassan Zong" # Name of the chat/group to monitor
+  poll_interval: 1.0 # Seconds to wait in the main loop
+
+output:
+  links_file: "found_zoom_links.txt" # Where to save all matched meetings
+
+zoom:
+  auto_join: true # If true, the bot will automatically open a new tab and launch the meeting
+
+logging:
+  level: "INFO"
+  file: "automator.log"
