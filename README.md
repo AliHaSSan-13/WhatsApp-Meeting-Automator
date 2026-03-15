@@ -2,6 +2,9 @@
 
 An automated tool that monitors a specific WhatsApp Web chat for Zoom meeting links, extracts the meeting details, and automatically joins the meeting using the Zoom web client.
 
+> [!WARNING]
+> **Disclaimer:** Use this tool at your own risk. Automating interactions on platforms like WhatsApp and Zoom may violate their Terms of Service. The developers are not responsible for any account bans, suspensions, or other negative consequences that may arise from using this software.
+
 ## Prerequisites
 
 - Google Chrome browser
