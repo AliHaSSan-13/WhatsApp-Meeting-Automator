@@ -49,7 +49,7 @@ class BrowserManager:
         if not self._context:
             raise RuntimeError("Browser is not connected.")
         
-        logger.info("Opening a new browser tab...")
+        #logger.info("Opening a new browser tab...")
         return await self._context.new_page()
 
     async def switch_to_main_page(self):

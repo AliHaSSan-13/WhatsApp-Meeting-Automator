@@ -69,7 +69,7 @@ class ZoomJoiner:
             
             # Step 2: Open a new tab and navigate directly to the web client
             page = await self.browser_manager.get_new_page()
-            logger.info(f"Navigating directly to Zoom Web Client: {wc_url}")
+            #logger.info(f"Navigating directly to Zoom Web Client: {wc_url}")
             
             try:
                 await page.goto(wc_url, wait_until="domcontentloaded", timeout=timeout_seconds * 1000)
@@ -80,14 +80,14 @@ class ZoomJoiner:
                     logger.warning(f"Navigation warning: {str(nav_e)}")
             
             # Step 3: Wait for the Zoom React app to fully initialise
-            logger.info("Waiting for Zoom web client to fully load...")
+            #logger.info("Waiting for Zoom web client to fully load...")
             try:
                 await page.wait_for_load_state("networkidle", timeout=20000)
             except Exception:
                 logger.warning("Network did not reach idle state — proceeding with extra time buffer.")
             await asyncio.sleep(3)
 
-            logger.info("Phase 1 join flow complete for meeting. Waiting for permission dialog...")
+            #logger.info("Phase 1 join flow complete for meeting. Waiting for permission dialog...")
             
             # Step 4: Wait for network idle and handle the "Continue without microphone and camera" permission
             try:
@@ -101,7 +101,7 @@ class ZoomJoiner:
                     try:
                         el = frame.locator(locator_str).first
                         if await el.count() > 0:
-                            logger.info(f"Found '{locator_str}' in frame: '{frame.name or 'main'}'")
+                            #logger.info(f"Found '{locator_str}' in frame: '{frame.name or 'main'}'")
                             await el.evaluate("node => node.click()")
                             return True
                     except Exception:
@@ -113,27 +113,27 @@ class ZoomJoiner:
             
             # User mentioned it needs to be clicked 2 times
             for i in range(2):
-                logger.info(f"Attempting to click permission button (Continue without mic/cam) - attempt {i+1}...")
+                #logger.info(f"Attempting to click permission button (Continue without mic/cam) - attempt {i+1}...")
                 if await force_click_in_frames(permission_selector):
-                    logger.info(f"Clicked permission button on attempt {i+1}.")
+                    #logger.info(f"Clicked permission button on attempt {i+1}.")
                     await asyncio.sleep(2)  # Wait for UI to react
                 else:
                     # Generic fallback if specific selector fails
                     if await force_click_in_frames("span:has-text('Continue without')"):
-                        logger.info(f"Clicked permission button via text fallback on attempt {i+1}.")
+                        #logger.info(f"Clicked permission button via text fallback on attempt {i+1}.")
                         await asyncio.sleep(2)
                     else:
                         logger.debug(f"Permission button not found on attempt {i+1}.")
                         break
 
             # Step 6: Fill the Name input
-            logger.info(f"Attempting to enter name: {display_name}")
+            logger.info(f"Entering name: {display_name}")
             name_filled = False
             for frame in page.frames:
                 try:
                     name_input = frame.locator("#input-for-name").first
                     if await name_input.count() > 0:
-                        logger.info(f"Found name input in frame: '{frame.name or 'main'}'")
+                        #logger.info(f"Found name input in frame: '{frame.name or 'main'}'")
                         await name_input.fill(display_name)
                         name_filled = True
                         break
@@ -160,19 +160,19 @@ class ZoomJoiner:
             await asyncio.sleep(2)
 
             # Step 7: Click the final Join button
-            logger.info("Attempting to click final Join button...")
+            logger.info("Joining...")
             join_btn_selector = "button.preview-join-button"
             
             if await force_click_in_frames(join_btn_selector):
-                logger.info("Successfully clicked final Join button.")
+                logger.info("Joined.")
             else:
                 # Fallback to text match
                 if await force_click_in_frames("button:has-text('Join')"):
-                    logger.info("Clicked Join button via text fallback.")
+                    logger.info("Joined.")
                 else:
                     logger.warning("Could not find final Join button.")
 
-            logger.info(f"Join flow completed for meeting [{meeting_id}].")
+            logger.info(f"Successfully joined meeting [{meeting_id}].")
             
             # Switch focus back to the main WhatsApp tab to keep monitoring active and visible
             await self.browser_manager.switch_to_main_page()
