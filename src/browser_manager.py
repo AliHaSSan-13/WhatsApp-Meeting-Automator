@@ -52,6 +52,17 @@ class BrowserManager:
         logger.info("Opening a new browser tab...")
         return await self._context.new_page()
 
+    async def switch_to_main_page(self):
+        """Brings the initial page (WhatsApp) back to the front."""
+        if self._page:
+            try:
+                logger.info("Switching focus back to the main WhatsApp tab...")
+                await self._page.bring_to_front()
+                return True
+            except Exception as e:
+                logger.error(f"Failed to switch back to main page: {str(e)}")
+        return False
+
     async def close(self):
         """Cleanly closes playwright resources."""
         if self._browser:

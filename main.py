@@ -6,6 +6,7 @@ from logger import setup_logger
 from src.browser_manager import BrowserManager
 from src.whatsapp_monitor import WhatsAppMonitor
 from src.zoom_parser import ZoomParser
+from src.zoom_joiner import ZoomJoiner
 
 async def main():
     # 1. Load Configuration
@@ -32,9 +33,6 @@ async def main():
     
     browser_manager = BrowserManager(browser_cfg.get("cdp_url"))
     zoom_parser = ZoomParser()
-    
-    # Needs to be imported at the top, we'll do an inline import for quick updating or just reference it
-    from src.zoom_joiner import ZoomJoiner
     zoom_joiner = ZoomJoiner(browser_manager)
     
     output_cfg = config.get("output", {})
@@ -42,6 +40,7 @@ async def main():
     
     zoom_cfg = config.get("zoom", {})
     auto_join = zoom_cfg.get("auto_join", False)
+    display_name = zoom_cfg.get("display_name", "Automator Guest")
     
     async def on_new_message(text: str):
         logger.info(f"CHAT MESSAGE: {text}")
@@ -63,7 +62,7 @@ async def main():
             
             # Conditionally launch the zoom meeting using the robust ZoomJoiner
             if auto_join:
-                await zoom_joiner.join_meeting(zoom_details)
+                await zoom_joiner.join_meeting(zoom_details, display_name=display_name)
 
     # Pass the callback function to the monitor
     monitor = WhatsAppMonitor(whatsapp_cfg.get("target_chat"), message_callback=on_new_message)

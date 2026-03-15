@@ -13,6 +13,7 @@ output:
 
 zoom:
   auto_join: true # If true, the bot will automatically open a new tab and launch the meeting
+  display_name: "Ali Hassan" # Your name here to use when joining meetings
 
 logging:
   level: "INFO"

@@ -112,6 +112,25 @@ class WhatsAppMonitor:
                         window.log_from_js("Target chat detected. Monitoring messages...");
 
                         const seenIds = new Set();
+                        
+                        // PRE-PROCESS EXISTING MESSAGES:
+                        // This prevents the bot from reacting to old messages that are already on screen
+                        // or get shifted around by WhatsApp's virtualized list during scrolling.
+                        const existingMsgs = container.querySelectorAll('[data-id]');
+                        for (const msgEl of existingMsgs) {{
+                            const msgId = msgEl.getAttribute('data-id');
+                            if (msgId) seenIds.add(msgId);
+                        }}
+                        
+                        // Keep the set size manageable, keeping the most recent.
+                        if (seenIds.size > 200) {{
+                            const arr = Array.from(seenIds);
+                            const toKeep = new Set(arr.slice(arr.length - 200));
+                            seenIds.clear();
+                            toKeep.forEach(id => seenIds.add(id));
+                        }}
+                        
+                        window.log_from_js("Pre-loaded " + existingMsgs.length + " existing messages to ignore.");
 
                         instance.msgObserver = new MutationObserver((mutations) => {{
                             for (const mutation of mutations) {{
