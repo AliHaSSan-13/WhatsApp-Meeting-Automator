@@ -43,43 +43,36 @@ class WhatsAppMonitor:
                     cleanup: function() {{
                         if (this.uiObserver) this.uiObserver.disconnect();
                         if (this.msgObserver) this.msgObserver.disconnect();
+                        if (this.fallbackInterval) clearInterval(this.fallbackInterval);
                         window.wa_automator_instance = null;
                     }},
                     
                     isTargetChatOpen: function() {{
-                        // 1. Try the specific selector provided by the user (highest priority)
-                        const userSelector = '#main > header > div.x78zum5.xdt5ytf.x1iyjqo2.xl56j7k.xeuugli.xtnn1bt.x9v5kkp.xmw7ebm.xrdum7p > div > div > div > div > span';
-                        const userEl = document.querySelector(userSelector);
-                        if (userEl) {{
-                            const title = (userEl.innerText || userEl.textContent).replace(/\\s+/g, ' ').trim().toLowerCase();
-                            if (title.includes(TARGET.toLowerCase())) return true;
+                        const normalize = (s) => (s || "").replace(/\\s+/g, ' ').trim().toLowerCase();
+                        const targetNorm = normalize(TARGET);
+                        
+                        const selectors = [
+                            'header [data-testid="conversation-info-header-chat-title"]',
+                            'header span[title]',
+                            '#main header span',
+                            '[data-testid="chat-header"] span',
+                            'header [role="button"]',
+                            '#main header'
+                        ];
+
+                        for (const sel of selectors) {{
+                            const elements = document.querySelectorAll(sel);
+                            for (const el of elements) {{
+                                const text = normalize(el.getAttribute('title') || el.innerText || el.textContent);
+                                if (text && text.includes(targetNorm)) return true;
+                            }}
                         }}
-
-                        const header = document.querySelector('header');
-                        if (!header) return false;
-
-                        // 2. Try data-testid fallback
-                        const headerTitleEl = header.querySelector('[data-testid="conversation-info-header-chat-title"]');
-                        if (headerTitleEl) {{
-                            const title = (headerTitleEl.innerText || headerTitleEl.textContent).replace(/\\s+/g, ' ').trim().toLowerCase();
-                            if (title.includes(TARGET.toLowerCase())) return true;
-                        }}
-
-                        // 3. Check all spans with title in header
-                        const titleSpans = header.querySelectorAll('span[title]');
-                        let foundTitles = [];
-                        for (const s of titleSpans) {{
-                            const title = s.getAttribute('title').replace(/\\s+/g, ' ').trim().toLowerCase();
-                            foundTitles.push(title);
-                            if (title.includes(TARGET.toLowerCase())) return true;
-                        }}
-
                         return false;
                     }},
 
                     checkAndAttach: function() {{
                         const now = Date.now();
-                        if (now - lastObserverCheck < 500) return; // Throttling
+                        if (now - lastObserverCheck < 1000) return;
                         lastObserverCheck = now;
 
                         const isOpen = this.isTargetChatOpen();
@@ -88,90 +81,107 @@ class WhatsAppMonitor:
                             if (this.msgObserver) {{
                                 this.msgObserver.disconnect();
                                 this.msgObserver = null;
-                                window.log_from_js("Chat '" + TARGET + "' is not active. Disconnecting message observer.");
+                                if (this.fallbackInterval) clearInterval(this.fallbackInterval);
+                                window.log_from_js("Target chat not detected.");
                             }}
                             
-                            // Re-open if enough time passed since last click
-                            if (now - lastRequestTime > 10000) {{
-                                window.log_from_js("Requesting click to open '" + TARGET + "'...");
+                            if (now - lastRequestTime > 15000) {{
+                                window.log_from_js("Chat '" + TARGET + "' hidden. Click requested.");
                                 lastRequestTime = now;
                                 window.request_click(TARGET);
                             }}
                             return;
                         }}
 
-                        // If open, attach/update message observer
                         const container = document.querySelector('#main') || 
-                                        document.querySelector('[data-testid="conversation-panel-messages"]') || 
-                                        document.querySelector('div[role="application"]');
+                                        document.querySelector('[data-testid="conversation-panel-messages"]') ||
+                                        document.querySelector('[role="application"]');
                         
-                        if (!container) return;
-                        if (instance.lastContainer === container && instance.msgObserver) return;
+                        if (!container || (instance.lastContainer === container && instance.msgObserver)) return;
                         
                         if (instance.msgObserver) instance.msgObserver.disconnect();
-                        window.log_from_js("Target chat detected. Monitoring messages...");
+                        if (instance.fallbackInterval) clearInterval(instance.fallbackInterval);
+                        
+                        window.log_from_js("Link monitoring started for: " + TARGET);
 
                         const seenIds = new Set();
                         
-                        // PRE-PROCESS EXISTING MESSAGES:
-                        // This prevents the bot from reacting to old messages that are already on screen
-                        // or get shifted around by WhatsApp's virtualized list during scrolling.
-                        const existingMsgs = container.querySelectorAll('[data-id]');
-                        for (const msgEl of existingMsgs) {{
-                            const msgId = msgEl.getAttribute('data-id');
-                            if (msgId) seenIds.add(msgId);
-                        }}
-                        
-                        // Keep the set size manageable, keeping the most recent.
-                        if (seenIds.size > 200) {{
-                            const arr = Array.from(seenIds);
-                            const toKeep = new Set(arr.slice(arr.length - 200));
-                            seenIds.clear();
-                            toKeep.forEach(id => seenIds.add(id));
-                        }}
-                        
-                        window.log_from_js("Pre-loaded " + existingMsgs.length + " existing messages to ignore.");
-
-                        instance.msgObserver = new MutationObserver((mutations) => {{
-                            for (const mutation of mutations) {{
-                                for (const node of mutation.addedNodes) {{
-                                    if (node.nodeType === 1) {{ 
-                                        // 1. Find message containers within the added nodes
-                                        const msgElements = node.querySelectorAll ? node.querySelectorAll('[data-id]') : [];
-                                        
-                                        // Also check the node itself
-                                        const elementsToProcess = [...msgElements];
-                                        if (node.hasAttribute && node.getAttribute('data-id')) {{
-                                            elementsToProcess.push(node);
-                                        }}
-
-                                        for (const msgEl of elementsToProcess) {{
-                                            // Get unique ID (very reliable for WhatsApp)
-                                            const msgId = msgEl.getAttribute('data-id');
-                                            if (!msgId || seenIds.has(msgId)) continue;
-                                            
-                                            seenIds.add(msgId);
-                                            // Keep buffer size reasonable
-                                            if (seenIds.size > 200) {{
-                                                const firstValue = seenIds.values().next().value;
-                                                seenIds.delete(firstValue);
-                                            }}
-
-                                            // Extract content using specific selectors from the user's snippet
-                                            const selectableText = msgEl.querySelector('span[data-testid="selectable-text"]');
-                                            const textEl = selectableText || msgEl.querySelector('.copyable-text [dir]') || msgEl;
-                                            
-                                            const text = (textEl.innerText || "").trim();
-                                            if (text.length > 0) {{
-                                                window.notify_python(text);
-                                            }}
-                                        }}
+                        const processElements = (elements) => {{
+                            for (const el of elements) {{
+                                const msgId = el.getAttribute('data-id');
+                                if (!msgId || seenIds.has(msgId)) continue;
+                                seenIds.add(msgId);
+                                
+                                // Text Extraction Engine
+                                const textSelectors = [
+                                    'span[data-testid="selectable-text"]',
+                                    '.copyable-text span',
+                                    '._akbu span',
+                                    '._ahy5',
+                                    'span[dir="ltr"]'
+                                ];
+                                
+                                let text = "";
+                                for (const sel of textSelectors) {{
+                                    const textEl = el.querySelector(sel);
+                                    if (textEl) {{
+                                        const found = (textEl.innerText || textEl.textContent || "").trim();
+                                        if (found.length > text.length) text = found;
                                     }}
                                 }}
+                                
+                                // Final fallback: Get the longest text node content
+                                if (text.length < 5) {{
+                                    text = (el.innerText || "").trim();
+                                }}
+                                
+                                if (text.length > 0) {{
+                                    if (msgId.includes('@g.us')) {{
+                                        window.log_from_js("Captured message from Group: " + msgId.substring(msgId.length - 15));
+                                    }}
+                                    window.notify_python(text);
+                                }}
                             }}
+                        }};
+
+                        // Initial scan
+                        container.querySelectorAll('[data-id]').forEach(el => {{
+                            const id = el.getAttribute('data-id');
+                            if (id) seenIds.add(id);
                         }});
 
-                        instance.msgObserver.observe(container, {{ childList: true, subtree: true }});
+                        // 1. Mutation Observer (Deep subtree + Attributes)
+                        instance.msgObserver = new MutationObserver((mutations) => {{
+                            let toProcess = [];
+                            for (const mutation of mutations) {{
+                                if (mutation.type === 'childList') {{
+                                    mutation.addedNodes.forEach(node => {{
+                                        if (node.nodeType === 1) {{
+                                            if (node.getAttribute('data-id')) toProcess.push(node);
+                                            toProcess.push(...node.querySelectorAll('[data-id]'));
+                                        }}
+                                    }});
+                                }} else if (mutation.type === 'attributes' && mutation.attributeName === 'data-id') {{
+                                    toProcess.push(mutation.target);
+                                }}
+                            }}
+                            if (toProcess.length > 0) processElements(toProcess);
+                        }});
+
+                        instance.msgObserver.observe(container, {{ 
+                            childList: true, 
+                            subtree: true,
+                            attributes: true,
+                            attributeFilter: ['data-id']
+                        }});
+
+                        // 2. High-frequency Backup Scanner
+                        instance.fallbackInterval = setInterval(() => {{
+                            const all = container.querySelectorAll('[data-id]');
+                            const fresh = Array.from(all).filter(el => !seenIds.has(el.getAttribute('data-id')));
+                            if (fresh.length > 0) processElements(fresh);
+                        }}, 1000);
+
                         instance.lastContainer = container;
                     }}
                 }};
@@ -235,22 +245,4 @@ class WhatsAppMonitor:
         else:
             logger.info(f"CHAT MESSAGE: {clean_text}")
 
-    def launch_zoom(self, meeting_id: str, passcode: str = None):
-        """Cross-platform Zoom meeting launcher."""
-        uri = f"zoommtg://zoom.us/join?confno={meeting_id}"
-        if passcode:
-            uri += f"&pwd={passcode}"
-        
-        logger.info(f"Attempting to launch Zoom...")
-        
-        try:
-            if sys.platform == "linux":
-                subprocess.run(["xdg-open", uri], check=True)
-            elif sys.platform == "win32":
-                import os
-                os.startfile(uri)
-            elif sys.platform == "darwin":
-                subprocess.run(["open", uri], check=True)
-            logger.info("Zoom launch command executed successfully.")
-        except Exception as e:
-            logger.error(f"Failed to launch Zoom: {str(e)}")
+    

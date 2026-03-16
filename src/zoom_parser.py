@@ -13,7 +13,7 @@ class ZoomParser:
         # 1. Matches URLs like: https://us04web.zoom.us/j/12345678901?pwd=abcdefg
         # Also handles zoom.us/my/vanityurls
         self.url_pattern = re.compile(
-            r'https?://(?:[\w-]+\.)?zoom\.us/(?:j|my|w)/(\d+)(?:\S*pwd=([a-zA-Z0-9]+))?',
+            r'https?://(?:[\w-]+\.)?zoom\.us/(?:j|my|w)/(\d+)(?:\S*pwd=([a-zA-Z0-9\._\-]+))?',
             re.IGNORECASE
         )
         
