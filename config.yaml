@@ -11,9 +11,10 @@ whatsapp:
 output:
   links_file: "found_zoom_links.txt" # Where to save all matched meetings
 
+name:
+  display_name: "Your Name" # Your name here to use when joining meetings
 zoom:
   auto_join: true # If true, the bot will automatically open a new tab and launch the meeting
-  display_name: "Your Name" # Your name here to use when joining meetings
 
 meet:
   auto_join: true # If true, the bot will automatically join identified Google Meet links

@@ -42,11 +42,12 @@ async def main():
     
     zoom_cfg = config.get("zoom", {})
     meet_cfg = config.get("meet", {}) # New config block for meet
+    name_cfg = config.get("name", {})
     
     auto_join_zoom = zoom_cfg.get("auto_join", False)
     auto_join_meet = meet_cfg.get("auto_join", auto_join_zoom) # Fallback to zoom's auto_join
     
-    display_name = zoom_cfg.get("display_name", "Automator Guest")
+    display_name = name_cfg.get("display_name", "Automator Guest")
     
     async def on_new_message(text: str):
         # Log the raw text for debugging
