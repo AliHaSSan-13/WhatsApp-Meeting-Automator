@@ -7,9 +7,6 @@ from playwright.async_api import Page
 
 logger = logging.getLogger("automator.whatsapp")
 
-# Zoom Regex
-ZOOM_REGEX = r"https?:\/\/[\w\.]*zoom\.us\/j\/(\d+)(?:\S+pwd=([\w\d]+))?"
-
 class WhatsAppMonitor:
     """Monitors WhatsApp for Zoom links and handles them."""
     def __init__(self, target_chat: str, message_callback=None):
@@ -112,32 +109,12 @@ class WhatsAppMonitor:
                                 if (!msgId || seenIds.has(msgId)) continue;
                                 seenIds.add(msgId);
                                 
-                                // Text Extraction Engine
-                                const textSelectors = [
-                                    'span[data-testid="selectable-text"]',
-                                    '.copyable-text span',
-                                    '._akbu span',
-                                    '._ahy5',
-                                    'span[dir="ltr"]'
-                                ];
-                                
-                                let text = "";
-                                for (const sel of textSelectors) {{
-                                    const textEl = el.querySelector(sel);
-                                    if (textEl) {{
-                                        const found = (textEl.innerText || textEl.textContent || "").trim();
-                                        if (found.length > text.length) text = found;
-                                    }}
-                                }}
-                                
-                                // Final fallback: Get the longest text node content
-                                if (text.length < 5) {{
-                                    text = (el.innerText || "").trim();
-                                }}
+                                // el.innerText contains both message text and preview card text.
+                                const text = (el.innerText || el.textContent || "").trim();
                                 
                                 if (text.length > 0) {{
                                     if (msgId.includes('@g.us')) {{
-                                        window.log_from_js("Captured message from Group: " + msgId.substring(msgId.length - 15));
+                                        window.log_from_js("Captured group msg: " + msgId.substring(msgId.length - 15));
                                     }}
                                     window.notify_python(text);
                                 }}
@@ -236,6 +213,7 @@ class WhatsAppMonitor:
         """Passes the detected message content back via the callback, or logs it."""
         import asyncio
         clean_text = text.replace('\n', ' ').strip()
+        logger.info(f"[Browser] {clean_text}")
         
         if self.message_callback:
             if asyncio.iscoroutinefunction(self.message_callback):

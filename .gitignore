@@ -3,3 +3,4 @@ found_zoom_links.txt
 .agent/
 __pycache__/
 .venv/
+test_parser.py

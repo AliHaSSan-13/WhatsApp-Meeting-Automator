@@ -5,7 +5,7 @@ browser:
   timeout: 30000
 
 whatsapp:
-  target_chat: "BSIT23-27 M 6TH S WITH HOD" # Name of the chat/group to monitor
+  target_chat: "Your Chat Name" # Name of the chat/group to monitor  --BSIT23-27 M 6TH S WITH HOD
   poll_interval: 1.0 # Seconds to wait in the main loop
 
 output:
@@ -13,7 +13,10 @@ output:
 
 zoom:
   auto_join: true # If true, the bot will automatically open a new tab and launch the meeting
-  display_name: "Ali" # Your name here to use when joining meetings
+  display_name: "Your Name" # Your name here to use when joining meetings
+
+meet:
+  auto_join: true # If true, the bot will automatically join identified Google Meet links
 
 logging:
   level: "INFO"

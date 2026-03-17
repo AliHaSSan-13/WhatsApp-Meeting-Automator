@@ -1,9 +1,9 @@
-# WhatsApp to Zoom Automator
+# WhatsApp Meeting Automator (Zoom & Google Meet)
 
-An automated tool that monitors a specific WhatsApp Web chat for Zoom meeting links, extracts the meeting details, and automatically joins the meeting using the Zoom web client.
+An automated tool that monitors a specific WhatsApp Web chat for meeting links (Zoom or Google Meet), extracts the details, and automatically joins the meeting using the browser.
 
 > [!WARNING]
-> **Disclaimer:** Use this tool at your own risk. Automating interactions on platforms like WhatsApp and Zoom may violate their Terms of Service. The developers are not responsible for any account bans, suspensions, or other negative consequences that may arise from using this software.
+> **Disclaimer:** Use this tool at your own risk. Automating interactions on platforms like WhatsApp, Zoom, and Google Meet may violate their Terms of Service. The developers are not responsible for any account bans, suspensions, or other negative consequences that may arise from using this software.
 
 ## Prerequisites
 
@@ -35,9 +35,9 @@ google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-automat
 
 1. In the Chrome instance that just opened, navigate to [WhatsApp Web](https://web.whatsapp.com).
 2. Scan the QR code with your phone to log in (you will only need to do this once for the automation profile).
-3. Click on the specific chat (contact or group) where you expect to receive the Zoom links.
+3. Click on the specific chat (contact or group) where you expect to receive the links.
 4. **Important:** Wait for the chat to fully load and ensure the chat messages are visible on the screen before proceeding.
-5. **Important:** Don't Touch or scroll the browser after the bot starts.
+5. **Important:** Don't touch or scroll the browser after the bot starts.
 
 ## 3. Configuration
 
@@ -45,11 +45,14 @@ Open the `config.yaml` file in the project directory and set your preferences:
 
 ```yaml
 whatsapp:
-  target_chat_name: "<CHAT NAME>"  # The exact name of the chat or group
+  target_chat: "<CHAT NAME>"  # The exact name of the chat or group
 
 zoom:
-  auto_join: true                      # Set to true to automatically join the meeting
-  display_name: "<YOUR NAME>"           # Your desired name in the Zoom meeting
+  auto_join: true              # Automatically join Zoom meetings
+  display_name: "<YOUR NAME>"   # Your desired name for both Zoom & Meet
+
+meet:
+  auto_join: true              # Automatically join Google Meet meetings
 ```
 
 ## 4. Run the Automator
@@ -59,7 +62,7 @@ In a new terminal window, navigate to the project directory and set up the envir
 1. **Initialize the virtual environment:**
    ```bash
    python3 -m venv .venv
-   source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
 2. **Install requirements:**
@@ -75,16 +78,15 @@ In a new terminal window, navigate to the project directory and set up the envir
 
 ## How It Works
 
-1. **Monitors:** The script securely connects to your active Chrome session via CDP. It injects a reliable `MutationObserver` to monitor the specific WhatsApp chat for *new* incoming messages.
-2. **Parses:** When a message is received, powerful Regex patterns extract the Zoom `Meeting ID` and `Passcode` (handling messy multiline texts and varying formats).
+1. **Monitors:** The script connects to your active Chrome session via CDP. It injects a reliable `MutationObserver` + Fallback Scanner to monitor the specific WhatsApp chat for *new* incoming messages in real-time.
+2. **Parses:** When a message is received, powerful Regex patterns detect if it's a **Zoom** or **Google Meet** link.
 3. **Joins:** 
-   - A new browser tab is opened directly to the Zoom Web Client.
-   - It intelligently handles permissions ("Continue without microphone and camera").
-   - It inputs your display name and joins the room.
-4. **Resets:** The script switches focus back to the WhatsApp tab, ready to catch the next meeting link.
+   - **Zoom:** Opens a new tab directly to the Zoom Web Client, handles permission dialogs, and enters your display name.
+   - **Google Meet:** Opens a new tab, handles mic/cam dismissals, and clicks "Join now" or "Ask to join".
+4. **Resets:** The script switches focus back to the WhatsApp tab, ready for the next meeting.
 
 ## Troubleshooting
 
-- **`Connection refused` error:** Ensure Chrome was started with the commands in step 1. If it fails, completely close Chrome (check Task Manager/Activity Monitor) and try the command again.
-- **Bot misses messages:** Ensure the WhatsApp chat is actively selected and fully loaded in the browser. 
+- **`Connection refused` error:** Ensure Chrome was started with the commands in step 1. Check Task Manager to kill any lingering Chrome processes.
+- **Bot misses messages:** Ensure the WhatsApp chat is actively selected and fully loaded.
 - **Duplicate joins:** The bot has a built-in cache to prevent joining the exact same meeting ID multiple times in a single session.
