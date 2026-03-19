@@ -10,7 +10,21 @@ An automated tool that monitors a specific WhatsApp Web chat for meeting links (
 - Google Chrome browser
 - Python 3.8+
 
-## 1. Launch Chrome with Remote Debugging
+### 1. Clone (Download) the Project
+
+First, download the code to your computer:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+cd YOUR_REPO_NAME
+```
+If you don’t have Git installed:
+Download it as a ZIP from this link
+https://github.com/AliHaSSan-13/WhatsApp-Meeting-Automator/archive/refs/heads/main.zip
+Extract it
+Open the extracted folder in your terminal
+
+## 2. Launch Chrome with Remote Debugging
 
 To allow the automator to interact with your browser, you must launch Google Chrome with the remote debugging port enabled (`9222`). We also use a dedicated "Automation Profile" to keep your daily browsing separate and ensure clean sessions.
 
@@ -34,7 +48,7 @@ google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-automat
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --remote-debugging-port=9222 --user-data-dir="$HOME/Library/Application Support/Google/Chrome/AutomationProfile"
 ```
 
-## 2. Setup WhatsApp Web
+## 3. Setup WhatsApp Web
 
 1. In the Chrome instance that just opened, navigate to [WhatsApp Web](https://web.whatsapp.com).
 2. Scan the QR code with your phone to log in (you will only need to do this once for the automation profile).
@@ -42,7 +56,7 @@ google-chrome --remote-debugging-port=9222 --user-data-dir="$HOME/chrome-automat
 4. **Important:** Wait for the chat to fully load and ensure the chat messages are visible on the screen before proceeding.
 5. **Important:** Don't touch or scroll the browser after the bot starts.
 
-## 3. Configuration
+## 4. Configuration
 
 Open the `config.yaml` file in the project directory and set your preferences:
 
@@ -60,7 +74,7 @@ meet:
   auto_join: true # Automatically join Google Meet meetings
 ```
 
-## 4. Run the Automator
+## 5. Run the Automator
 
 In a new terminal window, navigate to the project directory and set up the environment:
 
