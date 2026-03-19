@@ -10,6 +10,20 @@ An automated tool that monitors a specific WhatsApp Web chat for meeting links (
 - Google Chrome browser
 - Python 3.8+
 
+
+### 1. Clone (Download) the Project
+
+First, download the code to your computer:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+cd YOUR_REPO_NAME
+If you don’t have Git installed:
+Download it as a ZIP from GitHub
+Extract it
+Open the extracted folder in your terminal
+
+
 ## 1. Launch Chrome with Remote Debugging
 
 To allow the automator to interact with your browser, you must launch Google Chrome with the remote debugging port enabled (`9222`). We also use a dedicated "Automation Profile" to keep your daily browsing separate and ensure clean sessions.
@@ -67,8 +81,13 @@ In a new terminal window, navigate to the project directory and set up the envir
 1. **Initialize the virtual environment:**
 
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+  python -m venv .venv
+
+  # Activate it
+  # On Windows:
+  .venv\Scripts\activate
+  # On Linux/macOS:
+  source .venv/bin/activate
    ```
 
 2. **Install requirements:**
