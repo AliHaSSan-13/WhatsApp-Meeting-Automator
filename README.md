@@ -15,13 +15,16 @@ An automated tool that monitors a specific WhatsApp Web chat for meeting links (
 First, download the code to your computer:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
-cd YOUR_REPO_NAME
+git clone https://github.com/AliHaSSan-13/WhatsApp-Meeting-Automator.git
+cd WhatsApp-Meeting-Automator
 ```
 If you don’t have Git installed:
 Download it as a ZIP from this link
+
 https://github.com/AliHaSSan-13/WhatsApp-Meeting-Automator/archive/refs/heads/main.zip
+
 Extract it
+
 Open the extracted folder in your terminal
 
 ## 2. Launch Chrome with Remote Debugging
